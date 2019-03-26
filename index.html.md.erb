@@ -1,0 +1,475 @@
+---
+title: Pivotal Tracker
+---
+
+
+
+## Product Snapshot
+<dl>
+  <dt>Current Pivotal Tracker Details</dt>
+  <dd>
+    <strong>Version</strong>: 1.3.1.7
+  </dd>
+  <dd>
+    <strong>Release Date</strong>: 7 June 2016</dd>
+  <dd>
+    <strong>Compatible Ops Manager Version(s)</strong>: 1.7.x, 1.6.x, 1.5.x</dd>
+  <dd>
+    <strong>Compatible Elastic Runtime Version(s)</strong>: 1.7.x, 1.6.x, 1.5.x</dd>
+  <dd>
+    <strong>vSphere support?</strong>
+    Yes</dd>
+  <dd>
+    <strong>AWS support?</strong>
+    Yes</dd>
+  <dd>
+    <strong>OpenStack support?</strong>
+    No</dd>
+</dl>
+
+
+<p class="note"><strong>Note</strong>: Pivotal Tracker for PCF (Pivotal Cloud Foundry) is deprecated and availability is restricted to existing customers. Contact <a href="https://pivotal.io/support">Support</a> for more information.</p>
+
+
+## Upgrading to the Latest Version
+Consider the following compatibility information before upgrading Pivotal Tracker.
+
+<table border="1" class="nice">
+  <tbody>
+    <tr>
+      <th style="white-space:nowrap;">Ops Manager Version</th>
+      <th>Supported Upgrades</th>
+    </tr>
+    <tr>
+      <th>1.3.x</th>
+      <td>
+        None. 1.1.1.0 is the only release available for Ops Manager 1.3.x.
+      </td>
+      <tr>
+        <th>1.4.x</th>
+        <td>
+          <ul>
+            <li>From 1.2.1.5 to 1.2.1.9, 1.2.1.10</li>
+            <li>From 1.2.1.9 to 1.2.1.10</li>
+            <li>From 1.2.1.10 to 1.2.1.14</li>
+            <li>From 1.2.1.14 to 1.2.1.15</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <th>1.5.x</th>
+        <td>
+          <ul>
+            <li>From 1.2.1.9 to 1.2.1.10</li>
+            <li>From 1.2.1.10 to 1.2.1.14</li>
+            <li>From 1.2.1.14 to 1.2.1.15</li>
+            <li>From 1.2.1.15 to 1.3.1.2</li>
+            <li>From 1.2.1.15 to 1.3.1.4</li>
+            <li>From 1.2.1.15 to 1.3.1.5</li>
+            <li>From 1.2.1.15 to 1.3.1.7</li>
+            <li>From 1.3.1.2 to 1.3.1.4</li>
+            <li>From 1.3.1.2 to 1.3.1.7</li>
+            <li>From 1.3.1.4 to 1.3.1.7</li>
+            <li>From 1.3.1.5 to 1.3.1.7</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <th>1.6.x</th>
+        <td>
+          <ul>
+            <li>From 1.3.1.1 to 1.3.1.2</li>
+            <li>From 1.3.1.2 to 1.3.1.4</li>
+            <li>From 1.3.1.2 to 1.3.1.7</li>
+            <li>From 1.3.1.4 to 1.3.1.7</li>
+            <li>From 1.3.1.5 to 1.3.1.7</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <th>1.7.x</th>
+        <td>
+          <ul>
+            <li>From 1.3.1.1 to 1.3.1.7</li>
+            <li>From 1.3.1.2 to 1.3.1.7</li>
+            <li>From 1.3.1.2 to 1.3.1.7</li>
+            <li>From 1.3.1.4 to 1.3.1.7</li>
+            <li>From 1.3.1.5 to 1.3.1.7</li>
+          </ul>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+
+
+
+## Software Requirements
+- Ops Manager 1.5 or later
+- Elastic Runtime 1.5 or later, with SMTP configured
+- [Ruby Buildpack 1.6.8](https://network.pivotal.io/products/buildpacks#/releases/630) installed as 'p-tracker_buildpack'
+- MySQL 5.5 or later database (optionally [MySQL for PCF](https://network.pivotal.io/products/p-mysql))
+
+
+## Infrastructure Requirements
+- Two Persistent VMs
+  - Memcached: 512MB RAM, 1GB ephemeral disk
+  - Solr: 2GB RAM, 1.5GB ephemeral disk, 3GB persistent disk
+- Two Ephemeral VMs
+  - Push/Delete Errands: 512MB RAM, 2GB ephemeral disk
+  - Compilation: 1GB RAM, 2GB ephemeral disk
+- Two Elastic Runtime Apps
+  - tracker-app: 1.5GB RAM, 1GB ephemeral disk
+  - tracker-workers: 1GB RAM, 1GB ephemeral disk
+
+Minimal Pivotal Tracker installation: 4GB RAM, 4.5GB ephemeral disk, 3GB persistent disk. Additional tracker-app instances: 1.5GB RAM, 1GB ephemeral disk.
+
+
+
+## Important Notes
+
+
+### Data Backups
+
+Pivotal Tracker does not yet back up any data it stores in the MySQL or blobstore services. Please work with your Pivotal Representative to ensure that proper backup and recovery policies are in place.
+
+
+### Database and Blobstore Sizing
+
+On average, an active user consumes ~23KB of DB storage and ~100KB of blobstore storage per day. An "active" user is defined as one that makes changes in Pivotal Tracker on a daily basis.
+
+
+### Migrating from MySQL for PCF to External Database
+Given the following scenario: Pivotal Tracker was configured to use MySQL for PCF, and end-users have data stored in Pivotal Tracker (projects, stories, etc.). If Pivotal Tracker is subsequently reconfigured to use an external database in Ops Manager, the MySQL data will be ***automatically deleted*** upon the next installation in Ops Manager. Be sure to migrate the existing database to the new, external database ***prior*** to doing this. Please work with your Pivotal Representative for more details.
+
+
+### Data Loss When Migrating from Riak CS for PCF to External Blobstore
+
+Given the following scenario: Pivotal Tracker was configured to use Riak CS for PCF, and end-users have data stored in Pivotal Tracker (specifically, attachment uploads are stored in the blobstore). If Pivotal Tracker is subsequently reconfigured to use an external blobstore in Ops Manager, the Riak CS data will be ***automatically deleted*** upon the next installation in Ops Manager. Be sure to migrate any blobstore objects that you want to preserve to the new blobstore ***prior*** to doing this. Please work with your Pivotal Representative for more details.
+
+<p class="note"><strong>Note</strong>: Riak CS for PCF is deprecated and availability is restricted to existing customers. Contact <a href="https://pivotal.io/support">Support</a> for more information.</p>
+
+## Installation Prerequisites
+
+### Pivotal Tracker Buildpack
+To ensure the required version of Ruby is available for Pivotal Tracker, the [Ruby Buildpack 1.6.8](https://network.pivotal.io/products/buildpacks#/releases/630) must be uploaded to Elastic Runtime as "p-tracker_buildpack". After downloading the buildpack from [Pivotal Network](https://network.pivotal.io/products/buildpacks#/releases/630), upload it as an administrator to Elastic Runtime with the "cf" CLI:
+
+```
+cf create-buildpack p-tracker_buildpack ruby_buildpack-cached-v1.6.8+1446579066.zip 99 --enable
+```
+
+Refer to the [Adding Buildpacks to Cloud Foundry](http://docs.pivotal.io/pivotalcf/adminguide/buildpacks.html) documentation for more information.
+
+
+### Pivotal Tracker Admin User
+As part of the Pivotal Tracker configuration in Ops Manager (see [Pivotal Tracker Admin Email](#pivotal_tracker_admin_email) below), an Elastic Runtime user must be specified to function as the Pivotal Tracker Administrator. This user does not need administrative privileges for Elastic Runtime though.
+
+The Pivotal Tracker Admin User must already exist in the Elastic Runtime User Database ("UAA"). The user will not be automatically created upon installation of the Pivotal Tracker product.
+
+NOTE: This user does not require any org or space permissions, since the account is not used for Elastic Runtime PaaS functions. This user will be granted administrative privileges only within the Pivotal Tracker application; installation of Pivotal Tracker does not modify the UAA Administrator permissions.
+
+
+### Pivotal Tracker Internal Support Email
+As part of the Pivotal Tracker configuration in Ops Manager, an email must be specified that will serve as first-tier support for users of Pivotal Tracker. For more details see [Pivotal Tracker Internal Support Email](#pivotal_tracker_support_email) below.
+
+
+
+## Install via Ops Manager
+To install Pivotal Tracker, follow the procedure for installing Ops Manager products:
+
+1. Download the product file from [Pivotal Network](https://network.pivotal.io/products/pivotal-tracker-cf).
+1. Upload the product file to your Ops Manager installation.
+1. Click **Add** next to the uploaded product description in the Available Products view to add this product to your staging area.
+1. Click the newly added tile to review any configurable options.
+1. Click **Apply Changes** to install the product.
+
+
+
+## Product Configuration
+
+
+### Assign Networks
+Assign the Network which should be used by Pivotal Tracker.  See the Ops Manager Director tile configuration and documentation for more information.
+
+
+### Assign Availability Zones
+Assign the Availability Zones which should be used by Pivotal Tracker.  See the Ops Manager Director tile configuration and documentation for more information.
+
+
+### Pivotal Tracker Config
+
+#### Subdomain of Pivotal Tracker app
+Enter the subdomain which should be used by Pivotal Tracker. This will be prepended to the *System Domain* configured in the Cloud Controller tab of Pivotal Elastic Runtime. For example, if the System Domain is `system.cf.biz` and the subdomain is `tracker`, Pivotal Tracker will be available to users at `tracker.system.cf.biz`.
+
+#### App Salt
+Enter a random string. This string is used as a salt when encrypting Pivotal Tracker user passwords. This must remain the same when re-installing Pivotal Tracker and using an existing database, otherwise pre-existing user passwords will not work after re-installation.
+
+#### <a name="pivotal_tracker_admin_email"></a>Pivotal Tracker Admin Email
+Enter the email of the Elastic Runtime user who will serve as the Pivotal Tracker Administrator.
+
+#### <a name="pivotal_tracker_support_email"></a>Pivotal Tracker Internal Support Email
+Enter the email address where support requests from Pivotal Tracker users will be sent. For example, this might be the email for your internal helpdesk queue. This email is displayed on the Pivotal Tracker Help page, FAQ page, and error page (when the server returns HTTP status code 500).
+
+#### Number of App Instances
+This specifies the number of Elastic Runtime application instances to use for Pivotal Tracker web application. Increase for more redundancy and/or scalability.  E.g., if you want the Pivotal Tracker web app to remain available even if one of the web app instances is restarted, set this to 2.
+
+
+
+### Blobstore Config
+
+#### Riak CS Service
+
+By default, Pivotal Tracker uses a Riak CS for PCF service instance to store file uploads attached to Pivotal Tracker Stories. Specify the Riak CS service plan to use when provisioning the Pivotal Tracker blobstore.
+
+<p class="note"><strong>Note</strong>: Riak CS for PCF is deprecated and availability is restricted to existing customers. Contact <a href="https://pivotal.io/support">Support</a> for more information.</p>
+
+#### External Blobstore
+
+If you prefer to use an external S3-compatible blobstore, enter the necessary configuration details.
+
+***WARNING: Reconfiguring Pivotal Tracker to use an external blobstore will delete any existing Pivotal Tracker Riak CS for PCF service and its associated data.***
+
+
+### Database Config
+
+#### MySQL Service
+By default, Pivotal Tracker uses a MySQL for PCF service instance to store data. Specify the MySQL service plan to use when provisioning the Pivotal Tracker database. Refer to the MySQL [Service Plan documentation](https://docs.pivotal.io/p-mysql/index.html#service-plan) for more information.
+
+#### External Database
+
+If you prefer to use an external MySQL-compatible database, enter the necessary configuration details.
+
+***WARNING: Reconfiguring Pivotal Tracker to use an external database will delete any existing Pivotal Tracker MySQL for PCF service and its associated data.***
+
+
+### Errands
+The *Push Pivotal Tracker* errand should always be enabled when installing, upgrading, or changing configuration of the Pivotal Tracker product.
+
+#### Elastic Runtime Details
+The *Push Pivotal Tracker* errand deploys and configures Pivotal Tracker apps in the Elastic Runtime PaaS.
+
+It uses the *system_services* Elastic Runtime user to:
+
+1. Create a *pivotal-tracker* Space under the *system* Org
+1. Provision MySQL and Blobstore service instances
+  * If a PCF-provided service is selected in Ops Manager, a service instance will be provisioned using the [CF marketplace](http://docs.pivotal.io/pivotalcf/devguide/services/#instances).
+  * If external service credentials are provided, a [user-provided service instance](http://docs.pivotal.io/pivotalcf/services/#user-provided-services) will be created.
+1. Push the Pivotal Tracker Web and Worker apps to Elastic Runtime
+
+
+### Resource Config
+
+You may change the resource configuration, but the defaults should be sufficient for most Pivotal Tracker installations.
+
+
+
+## Architecture Overview
+<%= image_tag('architecture_overview.svg') %>
+
+
+## Usage
+
+
+### Logging
+Pivotal Tracker Web and Worker apps log via Elastic Runtime [Loggregator](http://docs.pivotal.io/pivotalcf/loggregator/architecture.html).
+
+Logs for Pivotal Tracker Memcached and Solr jobs are available from the *Logs* section in Ops Manager.
+
+
+### App Status
+Pivotal Tracker has some pages which expose information about the status and health of the app:
+
+#### Env Info
+* **URI:** `https://<yourdomain>/env_info`
+* **Access:** Anyone with access to the domain can see this information, without being logged in to Elastic Runtime.
+* **Description:** Provides status on the various components and services which are part of or support Pivotal Tracker.  If problems with any of these are detected, they will be reported on this page.  The 'index' page is a summary of all components except 'attachments', with links to pages for individual components
+
+#### Env Info Attachments
+* **URI:** `https://<yourdomain>/env_info/attachments`
+* **Access:** Anyone with access to the domain can see this information, without being logged in to Elastic Runtime.
+* **Description:** Provides status on the blobstore, for either the default Riak CS blobstore or an external blobstore.  This information is not available on the the env_info "index" page.
+
+#### Private Install Info
+* **URI:** `https://<yourdomain>/private_install_info`
+* **Access:** Only an authenticated Pivotal Tracker Admin user can view this page.
+* **Description:** Provides detailed information on all Environment Variables which are present in the running Pivotal Tracker environment.  It also provides information on the license and users, but there are currently no license limits enforced in the Pivotal Tracker Cloud Foundry product.
+
+
+### Pivotal Tracker Administration
+The Pivotal Tracker Admin can access various pages to control the appearance and behavior of the application.  These are only accessible to an authenticated Pivotal Tracker Admin user, and can be reached via the "admin" link in the header.
+
+#### Admin FAQ
+* **URI:** `https://<yourdomain>/admin/single_account_mode_admin_faq`
+* **Description:** Answers frequently asked questions for the Pivotal Tracker Admin user.
+
+#### Projects
+* **URI:** `https://<yourdomain>/admin/find_projects`
+* **Description:** Allows the Admin to search, create, view, update, or delete projects.
+
+#### People
+* **URI:** `https://<yourdomain>/admin/people`
+* **Description:** Allows the Admin to search, create, view, update, or delete people. See [User Administration](#user_administration) for more information on adding and removing members.
+
+#### API Tokens
+* **URI:** `https://<yourdomain>/admin/tokens`
+* **Description:** Allows the admin to search and view Pivotal Tracker API Tokens.
+
+#### Maintenance
+* **URI:** `https://<yourdomain>/admin/maintenance_periods`
+* **Description:** Allows the Admin to search, create, view, or delete maintenance periods.  This will cause periodic "countdown" alerts to be shown to users.
+
+
+### <a name="user_administration"></a>User Administration
+
+#### Account Email Validation
+Note that Pivotal Tracker has stricter validation rules for a "valid" email address when compared to the Elastic Runtime UAA. It's possible an Elastic Runtime user was provisioned with an email such as `user@hostname`, which will fail validation when attempting to log in to Pivotal Tracker. We plan to address this limitation in a future release of Pivotal Tracker; in the meantime, the email will need to be changed by an Elastic Runtime administrator to an acceptable address such as `user@hostname.com`.
+
+#### Inviting Users to a Pivotal Tracker Project
+New Pivotal Tracker users can be invited via the Project "Add/Remove Members" page. Users can be added to multiple projects.
+
+1. Type in a valid email address of an Elastic Runtime user in the "Add a project member" field, assign the desired role, and click "ADD".
+1. The user will receive an email with a link which will allow them to finish the invitation process.
+1. The invited person does not need to be an existing Elastic Runtime user at the time of invitation.  If the invitee is a new user, they must complete the Elastic Runtime signup process before they can accept the Pivotal Tracker project invitation.
+
+#### Self-service Signup of New Users
+Because Pivotal Tracker uses the Elastic Runtime for user authentication, the ability for end-users to self-provision their own Pivotal Tracker accounts depends on the configuration of Elastic Runtime. Specifically, refer to the [Apps Manager documentation](http://docs.pivotal.io/pivotalcf/console/console-env-variables.html) pertaining to the `ENABLE_NON_ADMIN_USER_MANAGEMENT` configuration option.
+
+#### Suspended Users
+If a Pivotal Tracker user account is suspended by the Pivotal Tracker Administrator, the affected user will get an HTTP 500 response when trying to authenticate to Pivotal Tracker.
+
+#### Password Reset
+Pivotal Tracker users do not have the ability to reset their password. If a password is forgotten and needs to be reset, they will need to contact an Elastic Runtime administrator.
+
+
+
+## <a name="support"></a>Support
+Email tracker-pcf@pivotal.io with questions or problems.
+
+
+### Reporting Problems
+When reporting problems, please provide as much of the following information as possible or appropriate:
+
+* Steps to reproduce the problem including expected behavior and actual behavior
+* The URL of the page(s) involved
+* Any error messages shown
+* A screenshot/screencast showing the problem
+* Any relevant logs (see the "Logging" section above for details)
+* A screenshot or PDF of the `/env_info` and `/env_info/attachments` pages
+
+
+
+## <a name="migrating_to_external_db"></a>Migrating Data to an External Database
+
+Outlined below are the steps to migrate Pivotal Tracker data stored in a MySQL for PCF service instance
+to an external MySQL database. If any of the steps below aren't clear, please contact us for [support](#support).
+
+
+### Gather Prerequisite Information
+
+#### MySQL for PCF Service Instance Credentials
+
+Log in to Pivotal Tracker with the [admin account](#pivotal_tracker_admin_email) and navigate to `https://<yourdomain>/private_install_info`. Find the `DATABASE_URL` entry, which will be in the following format:  `mysql2://TRACKER_DB_USER:TRACKER_DB_PASSWORD@TRACKER_DB_HOST:3306/TRACKER_DB_NAME?reconnect=true`. Record the database user, password, and name. For example:
+
+| Credential Name       | Example Value                               |
+| --------------------- | ------------------------------------------- |
+| TRACKER\_DB\_USER     | zmiXBCnJUXdWOlk4                            |
+| TRACKER\_DB\_PASSWORD | 96hsLUvnP9l4GYqP                            |
+| TRACKER\_DB\_NAME     | cf_aca7137f\_49b7\_4926\_a96b\_b053659c5bd4 |
+
+From Ops Manager, click on the MySQL for PCF tile. Go to the 'Credentials' tab and record the VM Credentials for the MySQL Server job. Go to the 'Status' tab and record one of the IPs listed under the MySQL Server job. For example:
+
+| Credential Name     | Example Value    |
+| ------------------- | ---------------- |
+| MYSQL\_VM\_USER     | vcap             |
+| MYSQL\_VM\_PASSWORD | 4cde067ab5f331fa |
+| MYSQL\_VM\_IP       | 10.85.58.147     |
+
+#### External MySQL Database Credentials
+
+For the external database, record the hostname, port, user, password, and database name. For example:
+
+| Credential Name        | Example Value         |
+| ---------------------- | --------------------- |
+| EXTERNAL\_DB\_HOSTNAME | db-host01.my-corp.com |
+| EXTERNAL\_DB\_PORT     | 3306                  |
+| EXTERNAL\_DB\_USER     | mysql-tracker-user    |
+| EXTERNAL\_DB\_PASSWORD | 0xCOFFEE              |
+| EXTERNAL\_DB_NAME      | ext\_tracker\_db      |
+
+
+### Unmap Pivotal Tracker Route
+
+To prevent Pivotal Tracker users from adding new data while the migration takes place, map the
+application route to a new URL that is unknown to users. For example: map `tracker.system.cf.biz` to
+`tracker-maintenance.system.cf.biz`. For instructions on modifying routes, refer to the
+[Assign or Change a Route](http://docs.pivotal.io/pivotalcf/devguide/deploy-apps/routes-domains.html#map-route) documentation.
+
+
+### Export Data to Backup File
+
+Run the following command to export Pivotal Tracker data to the local file `/tmp/tracker_db_backup.sql`:
+
+```
+ssh MYSQL_VM_USER@MYSQL_VM_IP /var/vcap/packages/mariadb/bin/mysqldump \
+ -u TRACKER_DB_USER -p TRACKER_DB_NAME > /tmp/tracker_db_backup.sql
+```
+
+You will be prompted for the credential MYSQL\_VM\_PASSWORD, followed by TRACKER\_DB\_PASSWORD. For example:
+
+```
+$ ssh vcap@10.85.58.147 /var/vcap/packages/mariadb/bin/mysqldump \
+ -u zmiXBCnJUXdWOlk4 -p cf_aca7137f_49b7_4926_a96b_b053659c5bd4 > /tmp/tracker_db_backup.sql
+Ubuntu 14.04.3 LTS \n \l
+
+vcap@10.85.58.147's password:
+< enter 4cde067ab5f331fa >
+Enter password:
+< enter 96hsLUvnP9l4GYqP >
+```
+
+Verify the data was exported by checking the contents of `/tmp/tracker_db_backup.sql`.
+
+
+### Import Data to External Database
+
+Run the following command to import the Pivotal Tracker data into the external database:
+
+```
+mysql -h EXTERNAL_DB_HOSTNAME -P EXTERNAL_DB_PORT -u EXTERNAL_DB_USER -pEXTERNAL_DB_PASSWORD EXTERNAL_DB_NAME \
+ < /tmp/tracker_db_backup.sql
+```
+
+Note: There is no space between `-p` and EXTERNAL\_DB\_PASSWORD. For example:
+
+```
+$ mysql -h db-host01.my-corp.com -P 3306 -u mysql-tracker-user -p0xCOFFEE ext_tracker_db \
+ < /tmp/tracker_db_backup.sql
+```
+
+When the import is complete, log in to the external database and verify the data is populated. For example:
+
+```
+mysql> SELECT * FROM person LIMIT 5 \G
+...
+mysql> SELECT * FROM story LIMIT 5 \G
+```
+
+
+### Configure Pivotal Tracker to Use External Database
+
+From Ops Manager, click on the Pivotal Tracker tile and choose the Database Config section. Select the
+option to use an External Database and fill in the required information. Save the changes.
+
+Ensure that the *Push Pivotal Tracker* errand is enabled in the Errands section.
+
+Return to the Ops Manager Installation Dashboard and click the **Apply Changes** button.
+*Note:* After applying changes, the existing Pivotal Tracker database in MySQL for PCF
+will be ***destroyed***.
+
+
+### Post-Installation Steps
+
+Log in to Pivotal Tracker and verify the data was migrated (users, projects, stories).
+
+Delete the un-needed maintenance route; the original route (e.g. `tracker.system.cf.biz`) was re-mapped as part of
+the *Push Pivotal Tracker* errand.
